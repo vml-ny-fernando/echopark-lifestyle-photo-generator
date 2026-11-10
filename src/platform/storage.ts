@@ -30,6 +30,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type Koa from 'koa';
 
 import { sessionSecret } from './secret.ts';
+import { vehicleImageKey, vehicleThumbKey, VEHICLES } from '../shared/scene.ts';
 
 const env = process.env;
 const bucket = env['BUCKETEER_BUCKET_NAME'] ?? env['S3_BUCKET'];
@@ -424,7 +425,13 @@ export async function storageCheckRoute(ctx: Koa.Context): Promise<void> {
     }
   };
   const probe = `diagnostics/check-${Date.now()}.txt`;
-  await run('list vehicles/', async () => `${(await list('vehicles/')).length} file(s): ${(await list('vehicles/')).slice(0, 10).join(', ')}`);
+  await run('vehicle photos', async () => {
+    const files = await list('vehicles/');
+    const found = VEHICLES.filter((v) => files.includes(vehicleImageKey(v.id)) || seedPath(vehicleImageKey(v.id)));
+    const missing = VEHICLES.filter((v) => !found.includes(v)).map((v) => vehicleImageKey(v.id));
+    const extra = files.filter((f) => !VEHICLES.some((v) => f === vehicleImageKey(v.id) || f === vehicleThumbKey(v.id)));
+    return `${found.length}/${VEHICLES.length} found. Missing: ${missing.join(', ') || 'none'}. Unrecognised files in vehicles/: ${extra.join(', ') || 'none'}`;
+  });
   await run('write test file', () => putObject(probe, 'ok', { contentType: 'text/plain' }));
   await run('read test file', async () => {
     const b = await getObject(probe);
