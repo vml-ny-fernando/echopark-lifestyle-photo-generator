@@ -74,7 +74,14 @@ vars set:
 pnpm seed:vehicles ./vehicles
 ```
 
-The cast (character reference photos) is added in the app with Add Character.
+## Cast
+
+On first run (storage has no `library/cast.json` yet) the app loads every
+character sheet in `seed/cast/<Label>.jpg` as one character, named by the
+file. After that the cast is managed in the app (Add Character / edit /
+delete) and is never reseeded. Labels drive grouping: `Female30A`, `Male40B`,
+`MaleTeenA`, `DogA`, `GuideM30A`. Keep sheets at or under 2048px JPEGs (the
+app refuses uploads over 15 MB).
 
 ## Local development
 

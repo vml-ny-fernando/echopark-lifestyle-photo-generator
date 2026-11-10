@@ -1,4 +1,7 @@
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
+import { readdir, readFile } from 'node:fs/promises';
+import * as path from 'node:path';
 
 import { documentStore, getObject, putObject } from './storage.ts';
 import type { SceneConfig } from './shared/scene.ts';
@@ -58,7 +61,49 @@ export type SceneCheck = {
 
 const store = documentStore<unknown>({ prefix: 'library/' });
 
+let seeding: Promise<void> | undefined;
+
+/**
+ * First run only: when storage has no cast list at all, build it from the
+ * character sheets shipped in `seed/cast/<Name>.jpg` (one character per file,
+ * named by its label). A cast someone has edited, even down to empty, is never
+ * reseeded.
+ */
+function seedCastOnce(): Promise<void> {
+  seeding ??= (async () => {
+    if (await store.get('cast.json')) return;
+    const dir = path.resolve(process.env['SEED_DIR'] ?? 'seed', 'cast');
+    if (!existsSync(dir)) return;
+    const files = (await readdir(dir)).filter((f) => /\.(jpe?g|png|webp)$/i.test(f)).sort();
+    const now = new Date().toISOString();
+    const characters: Character[] = [];
+    for (const file of files) {
+      const ext = file.split('.').pop()!.toLowerCase();
+      const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+      const key = newPhotoKey(type)!;
+      await putObject(key, new Uint8Array(await readFile(path.join(dir, file))), {
+        contentType: type,
+      });
+      characters.push({
+        id: newId(),
+        name: file.replace(/\.[^.]+$/, ''),
+        description: '',
+        photoKeys: [key],
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+    await store.update('cast.json', (cur) => cur ?? characters);
+    console.log(`[library] seeded ${characters.length} characters from seed/cast`);
+  })().catch((err) => {
+    seeding = undefined;
+    throw err;
+  });
+  return seeding;
+}
+
 export async function listCast(): Promise<Character[]> {
+  await seedCastOnce();
   const doc = await store.get('cast.json');
   return (doc?.value as Character[] | undefined) ?? [];
 }
