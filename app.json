@@ -1,0 +1,13 @@
+{
+  "name": "EchoPark Scene Studio",
+  "description": "Generate on-brand EchoPark lifestyle photos of approved characters with an Echo Green accent.",
+  "buildpacks": [{ "url": "heroku/nodejs" }],
+  "formation": { "web": { "quantity": 1, "size": "basic" } },
+  "addons": ["bucketeer:hobbyist"],
+  "env": {
+    "APP_PASSWORD": { "description": "Shared tester password.", "required": true },
+    "SESSION_SECRET": { "description": "Signs session cookies and upload URLs.", "generator": "secret" },
+    "GEMINI_API_KEY": { "description": "Google Gemini API key (Google AI Studio).", "required": true },
+    "NODE_ENV": { "value": "production" }
+  }
+}

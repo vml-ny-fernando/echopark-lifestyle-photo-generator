@@ -1,0 +1,91 @@
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.brief {
+  min-width: 0;
+}
+
+.stage {
+  position: sticky;
+  top: 24px;
+  min-width: 0;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* The stage is one flat Park Grey block (data-surface="park"): the photo
+     is judged on the brand's own neutral, as in its campaign layouts. */
+  padding: 28px;
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stage {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    padding: 16px;
+  }
+}
+
+.hex {
+  /* The brand colour itself, as a block behind its own code. Park Grey reads
+     better on Echo Green than white does. */
+  padding: 1px 6px;
+  font-weight: 700;
+  color: var(--brand-park);
+  background: var(--brand-echo);
+}
+
+.accentCustom {
+  margin-top: 12px;
+}
+
+.field + .field {
+  margin-top: 21px;
+}
+
+.fieldLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--bay-text);
+  margin-bottom: 8px;
+}
+
+.generateBar {
+  position: sticky;
+  bottom: 0;
+  padding: 16px 0;
+  background: linear-gradient(transparent, var(--bay-bg-canvas) 30%);
+}
+
+/* The EchoPark logo and the one-line brief, centred: the page's one brand
+   mark. */
+.logo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.intro {
+  margin: 0;
+  max-width: 72ch;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--bay-text-3);
+}
+
+.logo img {
+  display: block;
+  width: 250px;
+  max-width: 100%;
+  height: auto;
+}

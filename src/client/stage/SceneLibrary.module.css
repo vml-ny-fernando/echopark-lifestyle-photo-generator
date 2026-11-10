@@ -1,0 +1,246 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.filters {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip,
+.chipOn {
+  height: 26px;
+  padding: 0 10px;
+  font-family: var(--bay-font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bay-text-2);
+  background: var(--bay-bg-surface);
+  border: 1px solid var(--bay-border);
+  border-radius: var(--bay-r-md);
+  cursor: pointer;
+}
+
+.chip:hover {
+  border-color: var(--bay-border-strong);
+  background: var(--bay-bg-subtle);
+}
+
+.chipOn {
+  color: var(--bay-accent-fg);
+  background: var(--bay-accent-soft);
+  border-color: var(--bay-accent);
+}
+
+.chip:focus-visible,
+.chipOn:focus-visible,
+.main:focus-visible,
+.expand:focus-visible {
+  outline: 2px solid var(--bay-border-focus);
+  outline-offset: 2px;
+}
+
+.search {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  z-index: 1;
+  transform: translateY(-50%);
+  color: var(--bay-text-4);
+  pointer-events: none;
+}
+
+.search input {
+  padding-left: 30px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+@media (max-width: 560px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.tile {
+  position: relative;
+  min-width: 0;
+  border-radius: var(--bay-r-md);
+}
+
+.active {
+  box-shadow: 0 0 0 3px var(--bay-accent);
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--bay-font-sans);
+  text-align: left;
+  color: var(--bay-text);
+  background: var(--bay-bg-surface);
+  border: 1px solid var(--bay-border);
+  border-radius: var(--bay-r-md);
+  cursor: pointer;
+}
+
+.main:hover {
+  border-color: var(--bay-border-strong);
+}
+
+.img,
+.state {
+  display: block;
+  width: 100%;
+  /* Every thumbnail is a 16:9 crop, whatever the scene's master frame; the
+     img's width/height attributes only reserve space, so height must not
+     follow them. */
+  height: auto;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  background: var(--bay-bg-sunken);
+}
+
+.state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--bay-text-3);
+}
+
+.failed {
+  color: var(--bay-err-fg);
+  background: var(--bay-err-bg);
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--bay-bg-sunken) 25%,
+    var(--bay-bg-subtle) 50%,
+    var(--bay-bg-sunken) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+div.skeleton {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--bay-r-md);
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+.captionTitle,
+.captionSub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.captionTitle {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.captionSub {
+  font-size: 11px;
+  color: var(--bay-text-3);
+}
+
+/* The brand check's warning, pinned over the thumbnail's top-left corner. */
+.flag {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bay-warn-fg);
+  background: var(--bay-warn-bg);
+  pointer-events: none;
+}
+
+.expand {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--bay-text);
+  background: var(--bay-bg-surface);
+  border: 1px solid var(--bay-border);
+  border-radius: var(--bay-r-md);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity var(--bay-dur) var(--bay-ease);
+}
+
+.tile:hover .expand,
+.expand:focus-visible {
+  opacity: 1;
+}
+
+/* Touch screens have no hover: keep the control reachable. */
+@media (hover: none) {
+  .expand {
+    opacity: 1;
+  }
+}
+
+.expand:hover {
+  background: var(--bay-bg-subtle);
+}
+
+.more {
+  display: flex;
+  justify-content: center;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

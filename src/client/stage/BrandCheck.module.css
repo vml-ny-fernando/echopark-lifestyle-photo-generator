@@ -1,0 +1,49 @@
+.line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--bay-text-2);
+}
+
+.line > svg {
+  flex: none;
+  margin-top: 3px;
+}
+
+.ok {
+  color: var(--bay-accent);
+}
+
+.muted {
+  color: var(--bay-text-3);
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spin {
+    animation: none;
+  }
+}
+
+.flag {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.issues {
+  margin: 4px 0 6px;
+  padding-left: 18px;
+}

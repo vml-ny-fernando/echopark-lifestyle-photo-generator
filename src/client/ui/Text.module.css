@@ -1,0 +1,42 @@
+.text {
+  line-height: 1.55;
+}
+
+.default {
+  color: var(--bay-text);
+}
+
+.secondary {
+  color: var(--bay-text-3);
+}
+
+.muted {
+  color: var(--bay-text-4);
+}
+
+.sm {
+  font-size: 13px;
+}
+
+.md {
+  font-size: 14px;
+}
+
+/* Ink with an Echo Green underline: Echo Green type on white is below AA. */
+.link {
+  color: var(--bay-text);
+  text-decoration: underline;
+  text-decoration-color: var(--bay-accent);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.link[data-hovered] {
+  text-decoration-color: var(--bay-text);
+}
+
+.link[data-focus-visible] {
+  outline: 2px solid var(--bay-border-focus);
+  outline-offset: 2px;
+}

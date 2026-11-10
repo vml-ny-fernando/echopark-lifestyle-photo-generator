@@ -1,0 +1,30 @@
+.guides {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+
+/* Overlay chrome drawn on top of a photo: white dashes with a dark outer
+   hairline stay legible on any image, so these are not themed tokens. */
+.guide {
+  grid-area: 1 / 1;
+  position: relative;
+  box-sizing: border-box;
+  border: 1px dashed rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
+.chip {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  padding: 1px 5px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.98);
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: var(--bay-r-xs);
+}

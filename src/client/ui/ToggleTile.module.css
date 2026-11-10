@@ -1,0 +1,23 @@
+.tile {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: var(--bay-r-md);
+}
+
+.tile[data-disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tile[data-focus-visible] {
+  outline: 2px solid var(--bay-border-focus);
+  outline-offset: 2px;
+}

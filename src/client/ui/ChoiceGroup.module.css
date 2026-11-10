@@ -1,0 +1,130 @@
+.wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 6px;
+}
+
+.pictures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 8px;
+}
+
+.chip {
+  min-height: 32px;
+  padding: 6px 12px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1px;
+  text-align: left;
+  font: inherit;
+  color: var(--bay-text-2);
+  background: var(--bay-bg-surface);
+  border: 1px solid var(--bay-border);
+  border-radius: var(--bay-r-md);
+  cursor: pointer;
+  outline: none;
+  transition:
+    background var(--bay-dur-fast) var(--bay-ease),
+    border-color var(--bay-dur-fast) var(--bay-ease),
+    color var(--bay-dur-fast) var(--bay-ease);
+}
+
+.wide .chip {
+  padding: 8px 12px;
+}
+
+.pictures .chip {
+  padding: 6px 6px 8px;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.pictures .label,
+.pictures .hint {
+  padding: 0 4px;
+}
+
+.picture {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  margin-bottom: 4px;
+  border-radius: var(--bay-r-sm);
+  overflow: hidden;
+  /* Studio photos are shot on white; keep the tile white so they sit flush. */
+  background: #ffffff;
+}
+
+.picture img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.chip[data-hovered] {
+  border-color: var(--bay-text);
+  color: var(--bay-text);
+}
+
+.chip[data-pressed] {
+  background: var(--bay-bg-subtle);
+}
+
+/* Selected: the tile becomes a solid ink block, marked with an Energy Green
+   bar on its leading edge. */
+.chip[data-selected] {
+  border-color: var(--bay-text);
+  background: var(--bay-text);
+  color: var(--bay-bg-canvas);
+  box-shadow: inset 4px 0 0 var(--brand-energy);
+}
+
+.chip[data-focus-visible] {
+  outline: 2px solid var(--bay-border-focus);
+  outline-offset: 2px;
+}
+
+.label {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.hint {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--bay-text-3);
+}
+
+.icons {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  margin-top: 4px;
+  color: var(--bay-text-2);
+}
+
+.chip[data-selected] .icons {
+  color: var(--brand-energy);
+}
+
+.chip[data-selected] .hint {
+  color: var(--bay-bg-canvas);
+  opacity: 0.8;
+}
+
+/* Picture tiles keep the photo framed in white when selected; the bar moves
+   under the photo. */
+.pictures .chip[data-selected] {
+  box-shadow: inset 0 -4px 0 var(--brand-energy);
+}

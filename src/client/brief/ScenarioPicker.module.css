@@ -1,0 +1,15 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.custom {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.custom p {
+  margin: 0;
+}

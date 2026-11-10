@@ -1,0 +1,7 @@
+.box {
+  position: relative;
+  margin: 0 auto;
+  border-radius: var(--bay-r-md);
+  overflow: hidden;
+  background: var(--bay-bg-sunken);
+}

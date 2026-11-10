@@ -1,0 +1,88 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.skeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 16px;
+  text-align: center;
+  background: linear-gradient(
+    90deg,
+    var(--bay-bg-sunken) 25%,
+    var(--bay-bg-subtle) 50%,
+    var(--bay-bg-sunken) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.status {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bay-text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--bay-text-3);
+}
+
+.progress {
+  display: block;
+  width: min(240px, 70%);
+  height: 4px;
+  margin-top: 6px;
+  overflow: hidden;
+  background: var(--bay-border);
+  border-radius: var(--bay-r-pill);
+}
+
+.progressFill {
+  display: block;
+  height: 100%;
+  background: var(--bay-accent);
+  transition: width var(--bay-dur-slow) var(--bay-ease);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}

@@ -1,0 +1,29 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font-family: var(--bay-font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--bay-text);
+  text-decoration: none;
+  background: var(--bay-bg-surface);
+  border: 1px solid var(--bay-border);
+  border-radius: var(--bay-r-md);
+  transition:
+    background var(--bay-dur) var(--bay-ease),
+    border-color var(--bay-dur) var(--bay-ease);
+}
+
+.link:hover {
+  border-color: var(--bay-border-strong);
+  background: var(--bay-bg-subtle);
+}
+
+.link:focus-visible {
+  outline: 2px solid var(--bay-border-focus);
+  outline-offset: 2px;
+}

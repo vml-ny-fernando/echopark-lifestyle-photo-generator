@@ -1,0 +1,38 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--bay-text-2);
+  margin-bottom: 6px;
+}
+
+.input {
+  width: 100%;
+  height: 32px;
+  background: var(--bay-bg-surface);
+  border: 1px solid var(--bay-border-strong);
+  border-radius: var(--bay-r-md);
+  padding: 0 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--bay-text);
+}
+
+.input::placeholder {
+  color: var(--bay-text-4);
+}
+
+.input[data-focused] {
+  outline: none;
+  border-color: var(--bay-accent);
+  box-shadow: 0 0 0 3px rgba(var(--bay-accent-rgb), 0.18);
+}
+
+.input[data-disabled] {
+  opacity: 0.6;
+}

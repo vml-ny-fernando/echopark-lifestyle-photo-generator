@@ -1,0 +1,25 @@
+/* Each brief section opens with a solid Park Grey bar: the grid line that
+   carries the page, in place of hairlines. */
+.section {
+  margin-bottom: 36px;
+  padding-top: 12px;
+  border-top: 3px solid var(--bay-text);
+}
+
+.title {
+  margin: 0 0 4px;
+  font-family: var(--brand-font-display);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--bay-text);
+}
+
+.description {
+  margin: 0 0 14px;
+  max-width: 60ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--bay-text-3);
+}

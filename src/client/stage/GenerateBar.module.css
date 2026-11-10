@@ -1,0 +1,52 @@
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summary {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.generate {
+  width: 100%;
+  height: 40px;
+  font-size: 14px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.promptNote {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--bay-text-3);
+}
+
+.prompt {
+  margin: 0;
+  padding: 12px;
+  font-family: var(--bay-font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--bay-text-2);
+  background: var(--bay-bg-subtle);
+  border: 1px solid var(--bay-border-hair);
+  border-radius: var(--bay-r-md);
+}
+
+/* Cast wins: says the picked cast will play a scenario written for others. */
+.note {
+  margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--brand-echo);
+}

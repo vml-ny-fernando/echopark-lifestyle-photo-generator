@@ -1,0 +1,30 @@
+/**
+ * Motion, pill radius and avatar palette. These came from
+ * `@runway/bay-react/tokens.css` inside Runway; the self-hosted build defines
+ * them here. Brand colours stay in tokens.css, imported after this file.
+ */
+:root {
+  --bay-dur-fast: 120ms;
+  --bay-dur: 180ms;
+  --bay-dur-slow: 280ms;
+  --bay-ease: cubic-bezier(0.2, 0, 0, 1);
+  --bay-r-pill: 999px;
+
+  --bay-app-mint-bg: #d4f3e6;   --bay-app-mint-fg: #135c3e;
+  --bay-app-pink-bg: #fbdbe8;   --bay-app-pink-fg: #8a1c4a;
+  --bay-app-purple-bg: #e6dcfb; --bay-app-purple-fg: #4b2a8f;
+  --bay-app-sky-bg: #d6ebfa;    --bay-app-sky-fg: #144d78;
+  --bay-app-amber-bg: #fcebc7;  --bay-app-amber-fg: #7a4b05;
+  --bay-app-red-bg: #fbd9d6;    --bay-app-red-fg: #8c1d14;
+  --bay-app-lime-bg: #e4f5c4;   --bay-app-lime-fg: #3f6008;
+  --bay-app-cyan-bg: #d0f1f4;   --bay-app-cyan-fg: #0d5a63;
+  --bay-app-slate-bg: #e1e5e9;  --bay-app-slate-fg: #313d47;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --bay-dur-fast: 0ms;
+    --bay-dur: 0ms;
+    --bay-dur-slow: 0ms;
+  }
+}

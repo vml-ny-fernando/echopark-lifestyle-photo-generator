@@ -1,0 +1,23 @@
+.row {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.figure {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.figure svg {
+  display: block;
+  flex: none;
+}
+
+.count {
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
