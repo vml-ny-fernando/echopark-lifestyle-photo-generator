@@ -84,27 +84,37 @@ function seedCastOnce(): Promise<void> {
     }
     const rank = (f: string) => (/-headshot\./i.test(f) ? 0 : /-/.test(f) ? 2 : 1);
     const now = new Date().toISOString();
-    const characters: Character[] = [];
-    for (const [label, group] of [...byLabel].sort(([a], [b]) => a.localeCompare(b))) {
-      const photoKeys: string[] = [];
-      for (const file of group.sort((a, b) => rank(a) - rank(b)).slice(0, MAX_PHOTOS_PER_CHARACTER)) {
-        const ext = file.split('.').pop()!.toLowerCase();
-        const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
-        const key = newPhotoKey(type)!;
-        await putObject(key, new Uint8Array(await readFile(path.join(dir, file))), {
-          contentType: type,
-        });
-        photoKeys.push(key);
-      }
-      characters.push({
-        id: newId(),
-        name: label,
-        description: '',
-        photoKeys,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
+    // Upload in parallel so the first load stays well inside Heroku's 30 s
+    // request limit.
+    const characters: Character[] = await Promise.all(
+      [...byLabel]
+        .sort(([x], [y]) => x.localeCompare(y))
+        .map(async ([label, group]) => {
+          const ordered = group
+            .sort((x, y) => rank(x) - rank(y))
+            .slice(0, MAX_PHOTOS_PER_CHARACTER);
+          const photoKeys = await Promise.all(
+            ordered.map(async (file) => {
+              const ext = file.split('.').pop()!.toLowerCase();
+              const type =
+                ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+              const key = newPhotoKey(type)!;
+              await putObject(key, new Uint8Array(await readFile(path.join(dir, file))), {
+                contentType: type,
+              });
+              return key;
+            })
+          );
+          return {
+            id: newId(),
+            name: label,
+            description: '',
+            photoKeys,
+            createdAt: now,
+            updatedAt: now,
+          };
+        })
+    );
     await store.update('cast.json', (cur) => cur ?? characters);
     console.log(`[library] seeded ${characters.length} characters from seed/cast`);
   })().catch((err) => {
