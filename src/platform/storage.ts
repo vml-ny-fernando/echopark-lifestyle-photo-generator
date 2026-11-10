@@ -87,6 +87,12 @@ function seedPath(key: string): string | null {
   return existsSync(file) ? file : null;
 }
 
+/** Other names a vehicle photo may have been uploaded under (.jpeg, .png, .webp). */
+function vehicleAliases(key: string): string[] {
+  const m = /^(vehicles\/[^/]+)\.jpg$/.exec(key);
+  return m ? ['jpeg', 'JPG', 'JPEG', 'png', 'webp'].map((e) => `${m[1]}.${e}`) : [];
+}
+
 export const STORAGE_UPLOAD_FAILURE_HINT =
   'The photo could not be stored. Try adding it again.';
 
@@ -143,6 +149,10 @@ export async function getObject(key: string): Promise<Uint8Array | null> {
     return new Uint8Array(await fs.readFile(localPath(key)));
   } catch (err) {
     if (!isMissing(err)) throw err;
+    for (const alias of vehicleAliases(safeKey(key))) {
+      const bytes = await getObject(alias);
+      if (bytes) return bytes;
+    }
     const seed = seedPath(safeKey(key));
     return seed ? new Uint8Array(await fs.readFile(seed)) : null;
   }
@@ -193,6 +203,8 @@ export async function headObject(
   contentType?: string | undefined;
   /** Set when the object is the read-only copy in `seed/`. */
   seedFile?: string | undefined;
+  /** Set when the object was found under another extension. */
+  aliasKey?: string | undefined;
 } | null> {
   try {
     if (s3) {
@@ -205,6 +217,10 @@ export async function headObject(
     return { size: st.size, contentType: contentTypeFor(key) };
   } catch (err) {
     if (!isMissing(err)) throw err;
+    for (const alias of vehicleAliases(safeKey(key))) {
+      const head = await headObject(alias);
+      if (head) return { ...head, aliasKey: head.aliasKey ?? alias };
+    }
     const seed = seedPath(safeKey(key));
     if (!seed) return null;
     const st = await fs.stat(seed);
@@ -341,6 +357,7 @@ export function mediaRedirect(keyOf: (ctx: Koa.ParameterizedContext & { params: 
       ctx.body = '';
       return;
     }
+    if (head.aliasKey) key = head.aliasKey;
     const download = 'download' in ctx.query;
     const filename = key.split('/').pop() ?? 'file';
     if (s3 && !head.seedFile) {
@@ -427,9 +444,9 @@ export async function storageCheckRoute(ctx: Koa.Context): Promise<void> {
   const probe = `diagnostics/check-${Date.now()}.txt`;
   await run('vehicle photos', async () => {
     const files = await list('vehicles/');
-    const found = VEHICLES.filter((v) => files.includes(vehicleImageKey(v.id)) || seedPath(vehicleImageKey(v.id)));
+    const found = VEHICLES.filter((v) => [vehicleImageKey(v.id), ...vehicleAliases(vehicleImageKey(v.id))].some((k) => files.includes(k)) || seedPath(vehicleImageKey(v.id)));
     const missing = VEHICLES.filter((v) => !found.includes(v)).map((v) => vehicleImageKey(v.id));
-    const extra = files.filter((f) => !VEHICLES.some((v) => f === vehicleImageKey(v.id) || f === vehicleThumbKey(v.id)));
+    const extra = files.filter((f) => !VEHICLES.some((v) => [vehicleImageKey(v.id), vehicleThumbKey(v.id), ...vehicleAliases(vehicleImageKey(v.id))].includes(f)));
     return `${found.length}/${VEHICLES.length} found. Missing: ${missing.join(', ') || 'none'}. Unrecognised files in vehicles/: ${extra.join(', ') || 'none'}`;
   });
   await run('write test file', () => putObject(probe, 'ok', { contentType: 'text/plain' }));
