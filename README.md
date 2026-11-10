@@ -36,8 +36,8 @@ finished before the scene list refreshed (`useSceneGeneration.ts`).
    - **Supabase Storage**: create a private bucket, then Storage → Settings →
      S3 Connection → new access key, and set `S3_BUCKET` (bucket name),
      `S3_ENDPOINT` (`https://<project-ref>.storage.supabase.co/storage/v1/s3`),
-     `AWS_REGION` (the project's region, e.g. `us-east-1`),
-     `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
+     `S3_REGION` (the project's region, e.g. `us-east-1`),
+     `S3_ACCESS_KEY_ID` and `S3_SECRET_ACCESS_KEY`.
 3. **Set Config Vars** (Settings → Reveal Config Vars):
    - `APP_PASSWORD`: the password you give testers
    - `SESSION_SECRET` (optional): any long random string; without it testers

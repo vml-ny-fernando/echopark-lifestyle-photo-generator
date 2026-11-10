@@ -33,10 +33,16 @@ import { sessionSecret } from './secret.ts';
 
 const env = process.env;
 const bucket = env['BUCKETEER_BUCKET_NAME'] ?? env['S3_BUCKET'];
-const accessKeyId = env['BUCKETEER_AWS_ACCESS_KEY_ID'] ?? env['AWS_ACCESS_KEY_ID'];
+// S3_* names are preferred (e.g. Supabase Storage's S3 keys); AWS_* and
+// Bucketeer's names work too.
+const accessKeyId =
+  env['S3_ACCESS_KEY_ID'] ?? env['BUCKETEER_AWS_ACCESS_KEY_ID'] ?? env['AWS_ACCESS_KEY_ID'];
 const secretAccessKey =
-  env['BUCKETEER_AWS_SECRET_ACCESS_KEY'] ?? env['AWS_SECRET_ACCESS_KEY'];
-const region = env['BUCKETEER_AWS_REGION'] ?? env['AWS_REGION'] ?? 'us-east-1';
+  env['S3_SECRET_ACCESS_KEY'] ??
+  env['BUCKETEER_AWS_SECRET_ACCESS_KEY'] ??
+  env['AWS_SECRET_ACCESS_KEY'];
+const region =
+  env['S3_REGION'] ?? env['BUCKETEER_AWS_REGION'] ?? env['AWS_REGION'] ?? 'us-east-1';
 const endpoint = env['S3_ENDPOINT'] || undefined;
 /** Everything this app writes lives under this prefix in the bucket. */
 const prefix = (env['S3_PREFIX'] ?? 'echopark-scene-studio/').replace(/^\/+/, '');
