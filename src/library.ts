@@ -4,7 +4,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import * as path from 'node:path';
 
 import { documentStore, getObject, putObject } from './storage.ts';
-import type { SceneConfig } from './shared/scene.ts';
+import { MAX_PHOTOS_PER_CHARACTER, type SceneConfig } from './shared/scene.ts';
 
 /**
  * The brand library, shared by everyone who can open the app: the approved
@@ -75,20 +75,32 @@ function seedCastOnce(): Promise<void> {
     const dir = path.resolve(process.env['SEED_DIR'] ?? 'seed', 'cast');
     if (!existsSync(dir)) return;
     const files = (await readdir(dir)).filter((f) => /\.(jpe?g|png|webp)$/i.test(f)).sort();
+    // `<Label>.jpg` is the character sheet; `<Label>-headshot.jpg` (optional)
+    // becomes the first, portrait photo. Any other `<Label>-<x>.jpg` is extra.
+    const byLabel = new Map<string, string[]>();
+    for (const file of files) {
+      const label = file.replace(/\.[^.]+$/, '').replace(/-[^-]+$/, '');
+      byLabel.set(label, [...(byLabel.get(label) ?? []), file]);
+    }
+    const rank = (f: string) => (/-headshot\./i.test(f) ? 0 : /-/.test(f) ? 2 : 1);
     const now = new Date().toISOString();
     const characters: Character[] = [];
-    for (const file of files) {
-      const ext = file.split('.').pop()!.toLowerCase();
-      const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
-      const key = newPhotoKey(type)!;
-      await putObject(key, new Uint8Array(await readFile(path.join(dir, file))), {
-        contentType: type,
-      });
+    for (const [label, group] of [...byLabel].sort(([a], [b]) => a.localeCompare(b))) {
+      const photoKeys: string[] = [];
+      for (const file of group.sort((a, b) => rank(a) - rank(b)).slice(0, MAX_PHOTOS_PER_CHARACTER)) {
+        const ext = file.split('.').pop()!.toLowerCase();
+        const type = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+        const key = newPhotoKey(type)!;
+        await putObject(key, new Uint8Array(await readFile(path.join(dir, file))), {
+          contentType: type,
+        });
+        photoKeys.push(key);
+      }
       characters.push({
         id: newId(),
-        name: file.replace(/\.[^.]+$/, ''),
+        name: label,
         description: '',
-        photoKeys: [key],
+        photoKeys,
         createdAt: now,
         updatedAt: now,
       });
