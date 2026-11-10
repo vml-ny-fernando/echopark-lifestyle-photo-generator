@@ -52,6 +52,11 @@ const s3 = bucket
       region,
       endpoint,
       forcePathStyle: Boolean(endpoint),
+      // Recent AWS SDKs add CRC checksums to every upload by default, which
+      // S3-compatible services such as Supabase Storage reject. Only send
+      // them where an operation requires one.
+      requestChecksumCalculation: 'WHEN_REQUIRED',
+      responseChecksumValidation: 'WHEN_REQUIRED',
       ...(accessKeyId && secretAccessKey
         ? { credentials: { accessKeyId, secretAccessKey } }
         : {}),
