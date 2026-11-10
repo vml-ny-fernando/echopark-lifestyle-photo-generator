@@ -15,6 +15,7 @@ import { trpc } from './trpc.ts';
 import {
   ACCENTS,
   castInstruction,
+  suggestedCast,
   castWanted,
   DEFAULT_CONFIG,
   DEPTH,
@@ -100,6 +101,7 @@ export function App() {
             description={castInstruction(config)}
             label="The cast"
           >
+            <SuggestedCast roles={suggestedCast(config.scenario)} />
             <CastPicker
               selected={config.characterIds}
               onChange={set('characterIds')}
@@ -231,5 +233,20 @@ function Choices({
       onChange={onChange}
       wide={wide}
     />
+  );
+}
+
+/** "SUGGESTED: MALE 1 · MALE 2 · DOG" — who the scenario is written for. */
+function SuggestedCast({ roles }: { roles: string[] }) {
+  if (roles.length === 0) return null;
+  return (
+    <p className={styles.suggested}>
+      <span className={styles.suggestedLabel}>Suggested:</span>
+      {roles.map((r) => (
+        <span key={r} className={styles.suggestedRole}>
+          {r}
+        </span>
+      ))}
+    </p>
   );
 }

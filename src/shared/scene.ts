@@ -636,6 +636,35 @@ export function castWanted(scenarioId: string): number {
   return Math.min(scenario?.who.length ?? MAX_CAST_PER_SCENE, MAX_CAST_PER_SCENE);
 }
 
+const SUGGESTED_LABEL: Record<Figure, string> = {
+  man: 'MALE',
+  woman: 'FEMALE',
+  adult: 'ADULT',
+  child: 'CHILD',
+  baby: 'BABY',
+  dog: 'DOG',
+  guide: 'GUIDE',
+};
+
+/**
+ * The roles to cast for a scenario, as short labels: "MALE 1", "MALE 2",
+ * "DOG". Numbered only when a role appears more than once. Capped like
+ * `castWanted`; empty for Write Your Own.
+ */
+export function suggestedCast(scenarioId: string): string[] {
+  const scenario = SCENARIOS.find((s) => s.id === scenarioId);
+  if (!scenario) return [];
+  const who = scenario.who.slice(0, MAX_CAST_PER_SCENE);
+  const totals = new Map<Figure, number>();
+  for (const f of who) totals.set(f, (totals.get(f) ?? 0) + 1);
+  const seen = new Map<Figure, number>();
+  return who.map((f) => {
+    const n = (seen.get(f) ?? 0) + 1;
+    seen.set(f, n);
+    return totals.get(f)! > 1 ? `${SUGGESTED_LABEL[f]} ${n}` : SUGGESTED_LABEL[f];
+  });
+}
+
 /** The Cast section's instruction: how many to pick for this scenario. */
 export function castInstruction(config: Pick<SceneConfig, 'scenario'>): string {
   const scenario = SCENARIOS.find((s) => s.id === config.scenario);
