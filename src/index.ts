@@ -4,7 +4,7 @@ import Koa from 'koa';
 import { mountApi, mountStaticFallback } from './api-routes.ts';
 import { media } from './media.ts';
 import { testerAuth } from './platform/auth.ts';
-import { uploadRoute } from './platform/storage.ts';
+import { storageCheckRoute, uploadRoute } from './platform/storage.ts';
 import { mountStatic, mountTrpc } from './routes.ts';
 
 const app = new Koa();
@@ -29,6 +29,7 @@ app.use(testerAuth());
 // Browser uploads of cast photos: the signed URL from `presignUpload`.
 const uploadRouter = new Router();
 uploadRouter.put('/api/upload', uploadRoute);
+uploadRouter.get('/api/storage-check', storageCheckRoute);
 app.use(uploadRouter.routes());
 
 mountTrpc(app);

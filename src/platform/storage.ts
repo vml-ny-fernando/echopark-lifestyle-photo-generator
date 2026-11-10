@@ -401,3 +401,49 @@ export function documentStore<T>({ prefix: docPrefix }: { prefix: string }) {
 
   return { get, update };
 }
+
+// ---------------------------------------------------------------------------
+// Diagnostics: GET /api/storage-check (signed-in testers only).
+
+function describe(err: unknown): string {
+  const e = err as Error & { Code?: string; $metadata?: { httpStatusCode?: number } };
+  return [e?.name, e?.Code, e?.$metadata?.httpStatusCode, e?.message]
+    .filter((x) => x !== undefined && x !== '')
+    .join(' · ');
+}
+
+/** Tries each storage operation once and reports what failed, without secrets. */
+export async function storageCheckRoute(ctx: Koa.Context): Promise<void> {
+  const steps: { step: string; ok: boolean; detail?: string }[] = [];
+  const run = async (step: string, fn: () => Promise<string | void>) => {
+    try {
+      const detail = await fn();
+      steps.push({ step, ok: true, ...(detail ? { detail } : {}) });
+    } catch (err) {
+      steps.push({ step, ok: false, detail: describe(err) });
+    }
+  };
+  const probe = `diagnostics/check-${Date.now()}.txt`;
+  await run('list vehicles/', async () => `${(await list('vehicles/')).length} file(s): ${(await list('vehicles/')).slice(0, 10).join(', ')}`);
+  await run('write test file', () => putObject(probe, 'ok', { contentType: 'text/plain' }));
+  await run('read test file', async () => {
+    const b = await getObject(probe);
+    if (!b) throw new Error('written file not found');
+  });
+  await run('delete test file', () => deleteObject(probe));
+  await run('read missing file', async () => {
+    const b = await getObject('diagnostics/does-not-exist.txt');
+    return b ? 'unexpectedly found' : 'correctly reported missing';
+  });
+  ctx.set('Cache-Control', 'no-store');
+  ctx.body = {
+    backend: storageBackend,
+    bucket: bucket ?? null,
+    endpoint: endpoint ?? '(AWS default)',
+    region,
+    prefix,
+    accessKeySet: Boolean(accessKeyId),
+    secretKeySet: Boolean(secretAccessKey),
+    steps,
+  };
+}
