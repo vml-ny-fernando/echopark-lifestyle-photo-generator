@@ -103,7 +103,13 @@ function isMissing(err: unknown): boolean {
     (err as { name?: string })?.name === 'NotFound' ||
     (err as { $metadata?: { httpStatusCode?: number } })?.$metadata
       ?.httpStatusCode === 404 ||
-    (err as NodeJS.ErrnoException)?.code === 'ENOENT'
+    (err as NodeJS.ErrnoException)?.code === 'ENOENT' ||
+    // S3-compatible services word "missing" differently (Supabase Storage
+    // can answer 400 with "Object not found").
+    (err as { Code?: string })?.Code === 'NoSuchKey' ||
+    /NoSuchKey|not ?found|does not exist/i.test(
+      `${(err as Error)?.name ?? ''} ${(err as Error)?.message ?? ''}`
+    )
   );
 }
 
