@@ -28,12 +28,20 @@ finished before the scene list refreshed (`useSceneGeneration.ts`).
 
 1. **Connect GitHub.** Heroku app → Deploy → Deployment method: GitHub →
    connect this repo → Enable Automatic Deploys from `main` (or Deploy Branch).
-2. **Add storage.** Resources → add **Bucketeer** (Hobbyist is enough). It sets
-   the `BUCKETEER_*` config vars the app reads. Without a bucket, everything
-   uploaded is lost whenever the dyno restarts.
+2. **Storage (optional for a demo).** Without a bucket, files live on the
+   dyno's disk and the cast and generated scenes reset on every restart
+   (Heroku restarts at least daily); vehicle photos come from `seed/`. To keep
+   them, use any S3-compatible bucket:
+   - **Bucketeer** add-on: sets the `BUCKETEER_*` vars automatically.
+   - **Supabase Storage**: create a private bucket, then Storage → Settings →
+     S3 Connection → new access key, and set `S3_BUCKET` (bucket name),
+     `S3_ENDPOINT` (`https://<project-ref>.storage.supabase.co/storage/v1/s3`),
+     `AWS_REGION` (the project's region, e.g. `us-east-1`),
+     `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 3. **Set Config Vars** (Settings → Reveal Config Vars):
    - `APP_PASSWORD`: the password you give testers
-   - `SESSION_SECRET`: any long random string
+   - `SESSION_SECRET` (optional): any long random string; without it testers
+     are signed out on each restart
    - `GEMINI_API_KEY`: from https://aistudio.google.com/apikey (billing must be
      enabled on the Google project for the image model)
    - `NODE_ENV` = `production`
@@ -49,7 +57,9 @@ esbuild server bundle); the `Procfile` starts `.build/index.mjs`.
 ## Vehicle reference photos
 
 The approved vehicle photos lived in Runway's storage and were not part of the
-export. Put one image per vehicle in a folder, named by id, and upload them:
+export. The simplest home for them is `seed/vehicles/` in this repo: the app
+reads a vehicle from there whenever storage doesn't have it, so they survive
+dyno restarts even without a bucket. Name one image per vehicle by id:
 
 ```
 crossover-white.jpg   crossover-grey.jpg   sedan-slate-blue.jpg   sedan-grey.jpg
@@ -57,8 +67,8 @@ sedan-silver.jpg      pickup-white.jpg     convertible-blue.jpg
 ```
 
 Optional `<id>-thumb.jpg` files become the picker thumbnails (otherwise the
-full photo is shown). Then, with the bucket's env vars set (copy them from
-`heroku config`):
+full photo is shown). To put them in the bucket instead, with the bucket's env
+vars set:
 
 ```
 pnpm seed:vehicles ./vehicles

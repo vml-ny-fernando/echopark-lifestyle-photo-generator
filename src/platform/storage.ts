@@ -57,8 +57,22 @@ const localDir = path.resolve(env['LOCAL_STORAGE_DIR'] ?? '.data');
 export const storageBackend = s3 ? 's3' : 'local';
 if (!s3 && env['NODE_ENV'] === 'production') {
   console.warn(
-    '[storage] No bucket configured: using the local disk, which Heroku wipes on every restart. Add Bucketeer or set S3_BUCKET.'
+    '[storage] No bucket configured: using the local disk, which Heroku wipes on every restart (cast and scenes reset; vehicle photos come from seed/). Add Bucketeer or set S3_BUCKET to keep them.'
   );
+}
+
+/**
+ * Read-only files shipped in the repo under `seed/` (e.g.
+ * `seed/vehicles/crossover-white.jpg`). A key missing from storage falls back
+ * to its seed copy, so the approved vehicle photos survive even when storage
+ * is the dyno's disk, which Heroku wipes on every restart.
+ */
+const seedDir = path.resolve(env['SEED_DIR'] ?? 'seed');
+
+function seedPath(key: string): string | null {
+  if (!key.startsWith('vehicles/')) return null;
+  const file = path.join(seedDir, key);
+  return existsSync(file) ? file : null;
 }
 
 export const STORAGE_UPLOAD_FAILURE_HINT =
@@ -110,8 +124,9 @@ export async function getObject(key: string): Promise<Uint8Array | null> {
     }
     return new Uint8Array(await fs.readFile(localPath(key)));
   } catch (err) {
-    if (isMissing(err)) return null;
-    throw err;
+    if (!isMissing(err)) throw err;
+    const seed = seedPath(safeKey(key));
+    return seed ? new Uint8Array(await fs.readFile(seed)) : null;
   }
 }
 
@@ -155,7 +170,12 @@ export async function deleteObject(key: string): Promise<void> {
 
 export async function headObject(
   key: string
-): Promise<{ size: number; contentType?: string | undefined } | null> {
+): Promise<{
+  size: number;
+  contentType?: string | undefined;
+  /** Set when the object is the read-only copy in `seed/`. */
+  seedFile?: string | undefined;
+} | null> {
   try {
     if (s3) {
       const res = await s3.send(
@@ -166,8 +186,11 @@ export async function headObject(
     const st = await fs.stat(localPath(key));
     return { size: st.size, contentType: contentTypeFor(key) };
   } catch (err) {
-    if (isMissing(err)) return null;
-    throw err;
+    if (!isMissing(err)) throw err;
+    const seed = seedPath(safeKey(key));
+    if (!seed) return null;
+    const st = await fs.stat(seed);
+    return { size: st.size, contentType: contentTypeFor(key), seedFile: seed };
   }
 }
 
@@ -302,7 +325,7 @@ export function mediaRedirect(keyOf: (ctx: Koa.ParameterizedContext & { params: 
     }
     const download = 'download' in ctx.query;
     const filename = key.split('/').pop() ?? 'file';
-    if (s3) {
+    if (s3 && !head.seedFile) {
       const url = await getSignedUrl(
         s3,
         new GetObjectCommand({
@@ -322,7 +345,7 @@ export function mediaRedirect(keyOf: (ctx: Koa.ParameterizedContext & { params: 
     ctx.length = head.size;
     ctx.set('Cache-Control', 'private, max-age=600');
     if (download) ctx.attachment(filename);
-    ctx.body = createReadStream(localPath(key));
+    ctx.body = createReadStream(head.seedFile ?? localPath(key));
   };
 }
 
