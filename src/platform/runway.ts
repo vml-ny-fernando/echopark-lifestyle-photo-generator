@@ -199,7 +199,7 @@ type SceneParams = {
   text_prompt: string;
   image_size?: string;
   aspect_ratio?: string;
-  reference_images?: { tag: string; url: string }[];
+  reference_images?: { tag: string; url: string; label?: string }[];
 };
 
 type CheckParams = {
@@ -213,7 +213,7 @@ async function runScene(p: SceneParams): Promise<Pick<TaskState, 'url' | 'filena
   const model = process.env['GEMINI_IMAGE_MODEL'] ?? 'gemini-3-pro-image-preview';
   const parts: Part[] = [];
   for (const ref of p.reference_images ?? []) {
-    parts.push({ text: `Reference image @${ref.tag}:` });
+    parts.push({ text: `Reference image @${ref.tag}${ref.label ? ` (${ref.label})` : ''}:` });
     parts.push(imagePart(ref.url));
   }
   parts.push({ text: p.text_prompt });

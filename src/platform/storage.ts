@@ -30,7 +30,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type Koa from 'koa';
 
 import { sessionSecret } from './secret.ts';
-import { vehicleImageKey, vehicleThumbKey, VEHICLES } from '../shared/scene.ts';
+import { MAX_VEHICLE_ANGLES, vehicleAngleKey, vehicleImageKey, vehicleThumbKey, VEHICLES } from '../shared/scene.ts';
 
 const env = process.env;
 const bucket = env['BUCKETEER_BUCKET_NAME'] ?? env['S3_BUCKET'];
@@ -446,8 +446,11 @@ export async function storageCheckRoute(ctx: Koa.Context): Promise<void> {
     const files = await list('vehicles/');
     const found = VEHICLES.filter((v) => [vehicleImageKey(v.id), ...vehicleAliases(vehicleImageKey(v.id))].some((k) => files.includes(k)) || seedPath(vehicleImageKey(v.id)));
     const missing = VEHICLES.filter((v) => !found.includes(v)).map((v) => vehicleImageKey(v.id));
-    const extra = files.filter((f) => !VEHICLES.some((v) => [vehicleImageKey(v.id), vehicleThumbKey(v.id), ...vehicleAliases(vehicleImageKey(v.id))].includes(f)));
-    return `${found.length}/${VEHICLES.length} found. Missing: ${missing.join(', ') || 'none'}. Unrecognised files in vehicles/: ${extra.join(', ') || 'none'}`;
+    const keysFor = (id: string, n: number) => [vehicleAngleKey(id, n), ...vehicleAliases(vehicleAngleKey(id, n))];
+    const angleNums = Array.from({ length: MAX_VEHICLE_ANGLES - 1 }, (_, i) => i + 2);
+    const extra = files.filter((f) => !VEHICLES.some((v) => [vehicleThumbKey(v.id), ...keysFor(v.id, 1), ...angleNums.flatMap((n) => keysFor(v.id, n))].includes(f)));
+    const angles = VEHICLES.map((v) => `${v.id}: ${1 + angleNums.filter((n) => keysFor(v.id, n).some((k) => files.includes(k))).length}`);
+    return `${found.length}/${VEHICLES.length} found. Missing: ${missing.join(', ') || 'none'}. Angles per vehicle: ${angles.join(', ')}. Unrecognised files in vehicles/: ${extra.join(', ') || 'none'}`;
   });
   await run('write test file', () => putObject(probe, 'ok', { contentType: 'text/plain' }));
   await run('read test file', async () => {

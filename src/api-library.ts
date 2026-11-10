@@ -33,7 +33,9 @@ import {
   MAX_CAST_PER_SCENE,
   MAX_PHOTOS_PER_CHARACTER,
   type QualityId,
-  VEHICLE_TAG,
+  MAX_VEHICLE_ANGLES,
+  vehicleAngleKey,
+  vehicleAngleTag,
   vehicleImageKey,
   VEHICLES,
 } from './shared/scene.ts';
@@ -114,7 +116,7 @@ async function startCheck(
       {
         name: 'echopark-brand-check',
         prompt: CHECK_PROMPT,
-        images: [{ url: imageUrl }, { url: vehicle.url }],
+        images: [{ url: imageUrl }, { url: vehicle[0]!.url }],
         output_format: 'json',
         max_output_tokens: 4000,
       },
@@ -292,16 +294,22 @@ async function uploadReferences(
       }
       const filename = key.split('/').pop() ?? 'reference.jpg';
       const { url } = await runway.uploadAsset(bytes, { filename });
-      return { tag: j === 0 ? ref.tag : ref.extraTags![j - 1]!, url };
+      const label =
+        j === 0
+          ? `identity photo of ${ref.name}; match this ${ref.pet ? 'animal' : 'face'} exactly`
+          : `character sheet of ${ref.name}, the same ${ref.pet ? 'animal' : 'person'} as @${ref.tag}`;
+      return { tag: j === 0 ? ref.tag : ref.extraTags![j - 1]!, url, label };
     })
   );
   return Promise.all(jobs);
 }
 
-/** A fresh Runway reference URL for the scene's approved vehicle. */
+/**
+ * Reference URLs for the scene's approved vehicle: the main photo plus any
+ * extra angles stored as vehicles/<id>-2.jpg, -3.jpg, -4.jpg.
+ */
 async function uploadVehicle(runway: RunwayClient, id: string) {
-  const key = vehicleImageKey(id);
-  const bytes = await getObject(key);
+  const bytes = await getObject(vehicleImageKey(id));
   if (!bytes) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
@@ -309,8 +317,20 @@ async function uploadVehicle(runway: RunwayClient, id: string) {
         "This vehicle's reference photo is missing from the library. Pick another vehicle, or ask the brand team to restore it.",
     });
   }
-  const { url } = await runway.uploadAsset(bytes, { filename: `${id}.jpg` });
-  return { tag: VEHICLE_TAG, url };
+  const extras = await Promise.all(
+    Array.from({ length: MAX_VEHICLE_ANGLES - 1 }, (_, i) => getObject(vehicleAngleKey(id, i + 2)))
+  );
+  const all = [bytes, ...extras.filter((b): b is Uint8Array => b !== null)];
+  return Promise.all(
+    all.map(async (b, i) => {
+      const { url } = await runway.uploadAsset(b, { filename: `${id}-${i + 1}.jpg` });
+      return {
+        tag: vehicleAngleTag(i + 1),
+        url,
+        label: i === 0 ? 'the approved vehicle' : 'the same vehicle, another angle',
+      };
+    })
+  );
 }
 
 /** Download a finished image into the library, once. */
@@ -451,17 +471,19 @@ export const libraryProcedures = {
     .input(sceneConfig)
     .mutation(async ({ ctx, input }) => {
       const picked = castForScene(await listCast(), input.characterIds);
-      const prompt = buildPrompt(
-        input,
-        picked.map((p) => p.ref)
-      );
       let taskId: string;
+      let prompt: string;
       try {
         const [cast, vehicle] = await Promise.all([
           uploadReferences(ctx.runway, picked),
           uploadVehicle(ctx.runway, input.vehicle),
         ]);
-        const references = [...cast, vehicle];
+        prompt = buildPrompt(
+          input,
+          picked.map((p) => p.ref),
+          vehicle.length
+        );
+        const references = [...cast, ...vehicle];
         const task = await ctx.runway.createTask(SCENE_MODEL, {
           name: 'echopark-scene',
           text_prompt: prompt,

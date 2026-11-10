@@ -66,6 +66,11 @@ crossover-white.jpg   crossover-grey.jpg   sedan-slate-blue.jpg   sedan-grey.jpg
 sedan-silver.jpg      pickup-white.jpg     convertible-blue.jpg
 ```
 
+For closer likeness, add up to three extra angles of the same car as
+`<id>-2.jpg`, `<id>-3.jpg` and `<id>-4.jpg` (a turnaround sheet works too).
+Every angle is sent to the model as a reference of the same vehicle, and
+`/api/storage-check` lists how many angles each vehicle has.
+
 Optional `<id>-thumb.jpg` files become the picker thumbnails (otherwise the
 full photo is shown). To put them in the bucket instead, with the bucket's env
 vars set:

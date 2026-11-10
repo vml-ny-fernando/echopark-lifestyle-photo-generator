@@ -391,6 +391,17 @@ export function vehicleImageKey(id: string): string {
   return `vehicles/${id}.jpg`;
 }
 
+/** Extra angles of a vehicle beyond the main photo: vehicles/<id>-2.jpg, -3, -4. */
+export const MAX_VEHICLE_ANGLES = 4;
+
+export function vehicleAngleKey(id: string, n: number): string {
+  return n <= 1 ? vehicleImageKey(id) : `vehicles/${id}-${n}.jpg`;
+}
+
+export function vehicleAngleTag(n: number): string {
+  return n <= 1 ? VEHICLE_TAG : `${VEHICLE_TAG}${n}`;
+}
+
 export function vehicleThumbKey(id: string): string {
   return `vehicles/${id}-thumb.jpg`;
 }
@@ -704,7 +715,11 @@ export function labelOf(list: readonly Option[], id: string): string {
  * the prompt style the Nano Banana models follow best (verb first, subject →
  * action → place → composition → camera → light, no negations).
  */
-export function buildPrompt(config: SceneConfig, cast: CastRef[]): string {
+export function buildPrompt(
+  config: SceneConfig,
+  cast: CastRef[],
+  vehicleAngles = 1
+): string {
   const scenario = pick(SCENARIOS, config.scenario);
   const accent = pick(ACCENTS, config.accent);
   const vehicle = pick(VEHICLES, config.vehicle);
@@ -712,8 +727,11 @@ export function buildPrompt(config: SceneConfig, cast: CastRef[]): string {
   const light = pick(LIGHT, config.light);
   const lens = pick(LENSES, config.lens);
 
-  const people = cast.filter((c) => !c.pet);
-  const pets = cast.filter((c) => c.pet);
+  const isPet = (c: CastRef) => c.pet ?? castGroup(c.name) === 'pet';
+  const people = cast.filter((c) => !isPet(c));
+  const pets = cast.filter(isPet);
+  const guides = people.filter((c) => castGroup(c.name) === 'guide');
+  const guests = people.filter((c) => castGroup(c.name) !== 'guide');
   const ref = (c: CastRef) =>
     `@${c.tag} (${c.name}${c.description ? `, ${c.description}` : ''})`;
   const refs = cast.map(ref);
@@ -725,17 +743,24 @@ export function buildPrompt(config: SceneConfig, cast: CastRef[]): string {
     .filter((c) => c.extraTags?.length)
     .map(
       (c) =>
-        ` ${c.extraTags!.map((t) => `@${t}`).join(' and ')} show the same ${c.pet ? 'animal' : 'person'} as @${c.tag}.`
+        ` @${c.tag} is ${isPet(c) ? "the animal's" : "the person's"} identity photo and ${c.extraTags!.map((t) => `@${t}`).join(' and ')} ${c.extraTags!.length === 1 ? 'is a character sheet' : 'are character sheets'} of the same ${isPet(c) ? 'animal' : 'person'}, showing them from several angles; use them together to match ${isPet(c) ? 'the animal' : 'the person'} exactly.`
     )
     .join('');
+  const tags = (list: CastRef[]) => list.map((c) => `@${c.tag}`).join(' and ');
   const peopleLikeness =
     people.length === 0
       ? ''
-      : ` Keep ${people.length === 1 ? "this person's" : "each person's"} face, hair, skin tone and build exactly as in their reference photos, taking only the person's likeness from any character sheet, styled in fresh casual clothing that suits the moment.`;
+      : ` Keep ${people.length === 1 ? "this person's" : "each person's"} face, facial features, hair, skin tone, age and build exactly as in their reference photos, so they are instantly recognisable as the same individual.` +
+        (guests.length
+          ? ` ${tags(guests)} ${guests.length === 1 ? 'is' : 'are'} styled in fresh casual clothing that suits the moment, taking only the likeness from the character sheet, not the outfit.`
+          : '') +
+        (guides.length
+          ? ` ${tags(guides)} ${guides.length === 1 ? 'is an EchoPark guide and wears' : 'are EchoPark guides and wear'} exactly the uniform shown in ${guides.length === 1 ? 'their' : 'each'} character sheet, with no lettering or logos on it.`
+          : '');
   const petLikeness =
     pets.length === 0
       ? ''
-      : ` Keep ${pets.length === 1 ? "the pet's" : "each pet's"} breed, coat colours, markings and build exactly as in its reference photos, taking only the animal's likeness from any character sheet.`;
+      : ` Keep ${pets.length === 1 ? "the pet's" : "each pet's"} breed, coat colours, markings and build exactly as in its reference photos.`;
   const likeness = `${sameAs}${peopleLikeness}${petLikeness}`;
 
   const accentPhrase =
@@ -769,10 +794,21 @@ export function buildPrompt(config: SceneConfig, cast: CastRef[]): string {
       ? ''
       : ` ${who} ${cast.length === 1 ? 'plays the lead role' : 'play the lead roles'} in this scene, taking the place of the people${pets.length ? ' and pets' : ''} it describes in whichever roles suit them best. Keep the action, the setting and the car as described, and adapt each role (relationship, gender, age) to the cast member playing it, never the cast member to the role.${others}${likeness}`;
 
+  const angles = Math.max(1, Math.min(vehicleAngles, MAX_VEHICLE_ANGLES));
+  const vehicleRefs = Array.from({ length: angles }, (_, i) => `@${vehicleAngleTag(i + 1)}`).join(
+    angles === 2 ? ' and ' : ', '
+  );
+  const vehicleSheet =
+    angles > 1
+      ? `; these ${angles} images all show this one vehicle from different angles, so render it consistently with every one of them, once, from the angle that suits the shot`
+      : vehicle.sheet
+        ? `; @${VEHICLE_TAG} is a multi-view design sheet of one vehicle, so show it once, from the angle that suits the shot`
+        : '';
+
   return [
     `Capture a candid, authentic lifestyle photograph: ${moment}.${casting}`,
     `The mood is genuine, warm and relaxed — a real, unposed moment with natural expressions and body language.`,
-    `The car in the scene is the ${vehicle.noun} shown in @${VEHICLE_TAG}, with the same body shape, proportions, wheels and paint colour as @${VEHICLE_TAG}${vehicle.sheet ? ', which is a multi-view design sheet of one vehicle, so show it once, from the angle that suits the shot' : ''}; it stays clearly part of the moment. It is a premium, unbranded vehicle with an emblem-free grille, smooth unbadged panels and plain blank license plates.`,
+    `The car in the scene is the ${vehicle.noun} shown in ${vehicleRefs}, with exactly the same body shape, proportions, headlights, grille shape, wheels and paint colour${vehicleSheet}; it stays clearly part of the moment. It is a premium, unbranded vehicle with an emblem-free grille, smooth unbadged panels and plain blank license plates.`,
     accentLine,
     `No readable text, letters, numbers or logos anywhere in the frame: no brand emblems on the grille, tailgate, wheel centre caps or steering wheel, no model lettering, blank license plates, plain unmarked key fobs and keychains, unlabelled props and packaging, clothing without prints or lettering, and no signs, posters or screens with writing. Phones and screens stay dark or face away.`,
     `Compose for cropping: keep the people and the key action in the central third with generous headroom and breathing room on every side, so the frame crops cleanly to square, 4:5 and 9:16 vertical for social.`,
